@@ -1,0 +1,19 @@
+{
+  "name": "gloaming-dusk-skills",
+  "owner": {
+    "name": "gloaming-dusk"
+  },
+  "metadata": {
+    "description": "Agent skills for the Shady Wayland compositor and its desktop",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "shady",
+      "description": "Drive, script, test and extend the Shady Wayland compositor: shadyctl and the IPC socket, the shady.* Lua API, headless automation tests, C plugins and shaders.",
+      "source": "./",
+      "strict": false,
+      "skills": ["./shady"]
+    }
+  ]
+}
