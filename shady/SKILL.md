@@ -95,8 +95,9 @@ Outside `nix develop`, wrap commands: `nix develop -c ninja -C build`.
   module hooks, plugins, Lua bindings and compositor bindings only. To type into
   an application use `shady.automation.type_text` (needs `wtype`) or a real
   keyboard.
-- **The Lua `Window` object has no `id` field.** IPC window ids come from
-  `shadyctl windows` / `focused`. Match Lua windows by `app_id`/`title`.
+- **`window.id` in Lua is new.** Since Shady commit 53537a7 a Lua `Window` has
+  `id`, the same id IPC uses. Older builds have none (it reads `nil`): there,
+  take ids from `shadyctl windows` and match Lua windows by `app_id`/`title`.
 - **`screenshot` replies before the file exists.** The reply carries the path;
   the PNG is written with the next frame. Wait for the published value
   `screenshot.saved` (or `screenshot.failed`), or poll for the file. Only one
@@ -115,7 +116,8 @@ Outside `nix develop`, wrap commands: `nix develop -c ninja -C build`.
   The bare compositor binds `quit` to plain `Escape` by default.
 - Coordinates in automation and IPC are logical layout pixels, not buffer
   pixels.
-- `shady.automation.after(0, fn)` never fires; wait at least 1 ms.
+- Before Shady commit 53537a7, `shady.automation.after(0, fn)` never fires; use
+  1 ms or more when the build may be older.
 - A Lua error in `config.lua` (including a failed `shady.plugins.load`) stops
   the compositor from starting; wrap optional loads in `pcall`.
 

@@ -81,10 +81,10 @@ for _, w in ipairs(shady.windows()) do shady.log(w.app_id .. " " .. w.title) end
 local w = shady.focused_window()
 ```
 
-Window fields: `title`, `app_id`, `mapped`, `visible`, `x`, `y`, `width`,
+Window fields: `id` (the IPC id; builds before 53537a7 lack it), `title`, `app_id`, `mapped`, `visible`, `x`, `y`, `width`,
 `height` (surface, including client shadows), `geometry_width`,
 `geometry_height` (the window itself), `z` (spatial), `workspace`, `maximized`,
-`fullscreen`, `tiled`. There is **no `id`**. Methods: `focus()`, `close()`,
+`fullscreen`, `tiled`. Methods: `focus()`, `close()`,
 `maximize([on])`, `set_fullscreen([on])`, `move_to_workspace(name)`,
 `toggle_floating()`. A destroyed window reads as `nil`, methods return false.
 

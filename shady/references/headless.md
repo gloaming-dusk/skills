@@ -40,7 +40,7 @@ shady.bind("quit", "none")   -- or an Escape in the test ends the session
 
 | Function | |
 |---|---|
-| `after(ms, fn)` | run `fn` once after `ms` milliseconds; use **1 or more**: `after(0, fn)` never fires (a 0 ms Wayland timer is a disarmed one) |
+| `after(ms, fn)` | run `fn` once after `ms` milliseconds; `0` means the next pass of the event loop (builds before 53537a7 never fire a 0 ms timer, so use 1 or more there) |
 | `key(shortcut) -> bool` | press and release; true when a binding handled it |
 | `key_down(shortcut)` / `key_up(shortcut)` | one half; `key_down("Super_L"); key_up("Super_L")` is a Super tap |
 | `type_text(text) -> pid \| nil, err` | spawns `wtype` to type into the focused client |

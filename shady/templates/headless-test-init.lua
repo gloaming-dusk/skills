@@ -19,7 +19,8 @@ local function window(app_id)
     end
 end
 
--- ms must be at least 1: shady.automation.after(0, fn) never fires.
+-- Delays of at least 1 ms keep this working on Shady builds before 53537a7,
+-- where shady.automation.after(0, fn) never fires.
 local steps = {}
 local function step(ms, fn) steps[#steps + 1] = { ms, fn } end
 local function run(i)

@@ -126,7 +126,7 @@ done
 ```sh
 shadyctl lua 'shady.set("window_opacity", 0.9)'
 shadyctl lua 'return shady.current_workspace(), shady.workspaces()'
-shadyctl lua 'local w = shady.focused_window(); return w and {app_id = w.app_id, title = w.title}'
+shadyctl lua 'local w = shady.focused_window(); return w and {id = w.id, title = w.title}'
 shadyctl lua -f ./script.lua          # read locally, sent as text
 printf 'return 6 * 7\n' | shadyctl lua -
 ```
@@ -138,8 +138,9 @@ printf 'return 6 * 7\n' | shadyctl lua -
   become arrays and string keys objects. Userdata (Window, Output), functions,
   sparse/mixed tables and non-finite numbers are errors, so return fields, not
   objects. Limits: depth 16, 16 384 values, 1 MiB of JSON.
-- The Lua `Window` has no `id`. To act on a window over IPC, take its id from
-  `shadyctl windows`.
+- A Lua `Window`'s `id` is the IPC window id, so Lua can hand windows to IPC
+  commands. Builds before Shady commit 53537a7 have no `id` field; there, take
+  ids from `shadyctl windows`.
 - `print` and `shady.log` go to the compositor log, not to shadyctl.
 - Runs synchronously on the compositor thread: do not block; use
   `shady.automation.after(ms, fn)` to wait.
