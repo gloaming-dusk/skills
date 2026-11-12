@@ -69,7 +69,8 @@ server connected (its tools: `screenshot`, `click`, `type`, `key`, `drag`,
 see what changed; coordinates are pixels of the latest screenshot. Without it,
 the same loop works over IPC (`screenshot wait=true`, `pointer.click`, `type`,
 `key`, `wait idle=200`, see [references/ipc.md](references/ipc.md#computer-use)).
-Needs Shady 0.4.0. Work on a nested or headless Shady unless the user asked
+Needs Shady 0.4.0; on a real desktop `wait` settles from 0.4.1 (before, a
+bar's clock kept it waiting until its timeout). Work on a nested or headless Shady unless the user asked
 for their own session.
 
 **Look at the result of a change.** Run a second, nested Shady from the

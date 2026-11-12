@@ -63,7 +63,7 @@ Output: `{"name","width","height","scale","enabled"}` (logical size).
 | `pointer.scroll` | `dx`?, `dy`?, `x`?, `y`? | wheel clicks; positive is down/right |
 | `pointer.drag` | `x1`,`y1`,`x2`,`y2`, `button`?, `steps`? (10), `duration`? (300 ms; 0 = at once) | press, move, release; answers once released |
 | `window.at` | `x`, `y` | the window a click there would reach, or `null` |
-| `wait` | `ms`?, `idle`?, `timeout`? (5000) | answer after `ms`, then once nothing new is drawn for `idle` ms; data `{"settled","elapsed"}` |
+| `wait` | `ms`?, `idle`?, `timeout`? (5000), `scope`?, `window`? | answer after `ms`, then once nothing has changed for `idle` ms; data `{"settled","elapsed","active"?}` |
 | `screenshot` | `path`?, `delay`?, `wait`?, `output`?, `window`?, `x`/`y`/`width`/`height`?, `max_width`?, `max_height`? | save the next frame as PNG; see below |
 | `shortcuts.toggle` | | shells show/hide their overlay; with none subscribed Shady draws its own |
 | `lua` | `code`, `name`? | run Lua in the live runtime; data is the array of return values |
@@ -111,6 +111,15 @@ shadyctl type 'text=hello, 세계'
 shadyctl key keys=Return
 shadyctl wait idle=200 timeout=3000                            # let it settle, then look again
 ```
+
+What `wait` counts as a change (0.4.1): by default the windows (their
+surfaces and popups, the layout moving them, a layer surface with the
+keyboard, the lock screen), not a bar's clock or an animated wallpaper.
+`window=<id>` narrows it to one window; `scope=screen` counts every frame,
+as 0.4.0 always did, which on a real desktop rarely settles. An unsettled
+answer names what kept changing in `active` (`"window 3"`, `"layout"`, ...).
+In 0.4.0, a `wait` whose `idle` is longer than its `timeout` runs the whole
+`idle` and answers settled.
 
 Over MCP, [shady-mcp](https://github.com/gloaming-dusk/shady-mcp) wraps exactly
 this, with coordinates in screenshot pixels and the image returned inline.
