@@ -7,7 +7,7 @@ and scripts that an AI agent loads when a task calls for it.
 
 | Skill | What it teaches |
 |---|---|
-| [`shady`](shady/SKILL.md) | Driving a running session with `shadyctl` and the IPC socket, the `shady.*` Lua API for `config.lua` / `init.lua`, headless regression tests with `shady.automation`, native C plugins, shaders and environment loaders, and the traps that cost time |
+| [`shady`](shady/SKILL.md) | Driving a running session with `shadyctl` and the IPC socket, computer use (seeing the screen, clicking and typing), the `shady.*` Lua API for `config.lua` / `init.lua`, headless regression tests with `shady.automation`, native C plugins, shaders and environment loaders, and the traps that cost time |
 
 ## Install
 
@@ -17,6 +17,11 @@ and scripts that an AI agent loads when a task calls for it.
 /plugin marketplace add gloaming-dusk/skills
 /plugin install shady@gloaming-dusk-skills
 ```
+
+The plugin also connects the `shady` MCP server, for computer use: install
+[shady-mcp](https://github.com/gloaming-dusk/shady-mcp) so `shady-mcp` is on
+`PATH` (`nix profile install github:gloaming-dusk/shady-mcp`). Without it the
+skill works as before and only the server fails to start.
 
 **Any agent that reads skill folders**: copy or link `shady/` into its skills
 directory, for example `~/.claude/skills/shady` (personal) or

@@ -5,15 +5,22 @@
   },
   "metadata": {
     "description": "Agent skills for the Shady Wayland compositor and its desktop",
-    "version": "0.1.0"
+    "version": "0.2.0"
   },
   "plugins": [
     {
       "name": "shady",
-      "description": "Drive, script, test and extend the Shady Wayland compositor: shadyctl and the IPC socket, the shady.* Lua API, headless automation tests, C plugins and shaders.",
+      "description": "Drive, script, test and extend the Shady Wayland compositor: shadyctl and the IPC socket, computer use through the shady-mcp server, the shady.* Lua API, headless automation tests, C plugins and shaders.",
       "source": "./",
       "strict": false,
-      "skills": ["./shady"]
+      "skills": [
+        "./shady"
+      ],
+      "mcpServers": {
+        "shady": {
+          "command": "shady-mcp"
+        }
+      }
     }
   ]
 }

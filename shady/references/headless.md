@@ -41,9 +41,9 @@ shady.bind("quit", "none")   -- or an Escape in the test ends the session
 | Function | |
 |---|---|
 | `after(ms, fn)` | run `fn` once after `ms` milliseconds; `0` means the next pass of the event loop (builds before 53537a7 never fire a 0 ms timer, so use 1 or more there) |
-| `key(shortcut) -> bool` | press and release; true when a binding handled it |
+| `key(shortcut) -> handled, sent` | press and release; `handled` when a binding took it, else (0.4.0) `sent` to the focused window |
 | `key_down(shortcut)` / `key_up(shortcut)` | one half; `key_down("Super_L"); key_up("Super_L")` is a Super tap |
-| `type_text(text) -> pid \| nil, err` | spawns `wtype` to type into the focused client |
+| `type_text(text) -> count \| nil, err` | types any text into the focused window (0.4.0; before, it spawned `wtype` and returned a pid) |
 | `move_pointer(x, y)` | logical layout coordinates |
 | `click(button)` | `"left"`, `"right"`, `"middle"` or a Linux button code; the argument is required |
 | `button_down(button)` / `button_up(button)` | for drags that wait on the client between steps |

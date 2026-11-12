@@ -13,7 +13,8 @@ needs goes through five surfaces:
 
 | Surface | Use it for | Reference |
 |---|---|---|
-| IPC socket + `shadyctl` | Reading state and driving a running session from outside: windows, workspaces, keys, screenshots, events, running Lua | [references/ipc.md](references/ipc.md) |
+| IPC socket + `shadyctl` | Reading state and driving a running session from outside: windows, workspaces, keys, text, the pointer, screenshots, events, running Lua | [references/ipc.md](references/ipc.md) |
+| MCP (`shady-mcp`) | Computer use: an agent sees the screen and works it with clicks, typing and keys, through MCP tools | [shady-mcp](https://github.com/gloaming-dusk/shady-mcp) |
 | Lua (`shady.*`) | Configuration (`config.lua`), runtime behaviour (`init.lua`): bindings, rules, events, layout, published values | [references/lua.md](references/lua.md) |
 | Headless automation (`shady.automation`) | Deterministic regression tests on a headless backend | [references/headless.md](references/headless.md) |
 | C plugins | Native modules: input hooks, render hooks, per-window shaders, 3D representations, hot reload | [references/plugins.md](references/plugins.md) |
@@ -62,6 +63,15 @@ a socket, so be sure which one you are talking to.
 lua 'return …'` and return plain values (see the IPC reference for what
 serializes).
 
+**Use the desktop as a person does (computer use).** With the `shady` MCP
+server connected (its tools: `screenshot`, `click`, `type`, `key`, `drag`,
+`scroll`, `wait`, `windows`, ...), take a screenshot, act, and take another to
+see what changed; coordinates are pixels of the latest screenshot. Without it,
+the same loop works over IPC (`screenshot wait=true`, `pointer.click`, `type`,
+`key`, `wait idle=200`, see [references/ipc.md](references/ipc.md#computer-use)).
+Needs Shady 0.4.0. Work on a nested or headless Shady unless the user asked
+for their own session.
+
 **Look at the result of a change.** Run a second, nested Shady from the
 checkout and screenshot it; do not experiment on the user's own session.
 [`scripts/shady-nested.sh`](scripts/shady-nested.sh) starts one and prints its
@@ -91,17 +101,18 @@ Outside `nix develop`, wrap commands: `nix develop -c ninja -C build`.
 
 ## Traps that cost time
 
-- **IPC `key` and `shady.automation.key` never reach clients.** They go through
-  module hooks, plugins, Lua bindings and compositor bindings only. To type into
-  an application use `shady.automation.type_text` (needs `wtype`) or a real
-  keyboard.
+- **Before Shady 0.4.0, IPC `key` and `shady.automation.key` never reach
+  clients**, and `type_text` needs `wtype`. Since 0.4.0 a key no binding takes
+  goes to the focused window (`sent: true`), and `type` / `type_text` type any
+  text themselves. Check `shadyctl key` answers with a `sent` field before
+  relying on it.
 - **`window.id` in Lua is new.** Since Shady commit 53537a7 a Lua `Window` has
   `id`, the same id IPC uses. Older builds have none (it reads `nil`): there,
   take ids from `shadyctl windows` and match Lua windows by `app_id`/`title`.
-- **`screenshot` replies before the file exists.** The reply carries the path;
-  the PNG is written with the next frame. Wait for the published value
-  `screenshot.saved` (or `screenshot.failed`), or poll for the file. Only one
-  capture can be pending at a time.
+- **`screenshot` replies before the file exists**, unless you pass `wait=true`
+  (0.4.0), which replies once written with the image's geometry. Otherwise
+  wait for the published value `screenshot.saved` (or `screenshot.failed`), or
+  poll for the file. Only one capture can be pending at a time.
 - `shady.screenshot()` / IPC `screenshot` capture what Shady draws, 3D included,
   with no external tool. `shady.automation.screenshot` shells out to `grim` and
   is rarely what you want.

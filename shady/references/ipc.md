@@ -14,6 +14,9 @@ Full text: `docs/IPC_API.md` in the Shady checkout.
   A request line is at most 64 KiB.
 - Every request gets exactly one response, in order:
   `{"id":1,"ok":true,"data":...}` or `{"id":2,"ok":false,"error":"..."}`.
+  Some commands answer only once done (`screenshot` with `wait`,
+  `pointer.drag` with a `duration`, `wait`); later requests on the same
+  connection wait for that answer, so the order holds.
   `data` is omitted when a command returns nothing.
 - Protocol version 1 (`version`). Fields and events may be added within a
   version: ignore what you do not know.
@@ -50,8 +53,18 @@ Output: `{"name","width","height","scale","enabled"}` (logical size).
 | `window.fullscreen` | `window`, `state`? | set, or toggle without `state` |
 | `window.move` | `window`, `workspace` | move to a workspace (created if needed) |
 | `workspace.switch` | `name` | switch (created if needed) |
-| `key` | `keys` | press and release a shortcut; data `{"handled": bool}` |
-| `screenshot` | `path`?, `delay`? (0-10000 ms) | save the next frame as PNG; data `{"path": ...}` |
+| `key` | `keys` | press and release a shortcut; data `{"handled": bool, "sent": bool}` |
+| `key.down` / `key.up` | `keys` | only press / only release (`keys=Shift` alone holds Shift) |
+| `type` | `text` | type UTF-8 text into the focused window; data `{"typed": n}` |
+| `pointer` | | `{"x","y","window"}`: pointer position and the window id under it, or `null` |
+| `pointer.move` | `x`, `y` | move the pointer |
+| `pointer.click` | `x`?, `y`?, `button`?, `count`? (1-3) | move there, then click |
+| `pointer.down` / `pointer.up` | `x`?, `y`?, `button`? | press / release and leave it |
+| `pointer.scroll` | `dx`?, `dy`?, `x`?, `y`? | wheel clicks; positive is down/right |
+| `pointer.drag` | `x1`,`y1`,`x2`,`y2`, `button`?, `steps`? (10), `duration`? (300 ms; 0 = at once) | press, move, release; answers once released |
+| `window.at` | `x`, `y` | the window a click there would reach, or `null` |
+| `wait` | `ms`?, `idle`?, `timeout`? (5000) | answer after `ms`, then once nothing new is drawn for `idle` ms; data `{"settled","elapsed"}` |
+| `screenshot` | `path`?, `delay`?, `wait`?, `output`?, `window`?, `x`/`y`/`width`/`height`?, `max_width`?, `max_height`? | save the next frame as PNG; see below |
 | `shortcuts.toggle` | | shells show/hide their overlay; with none subscribed Shady draws its own |
 | `lua` | `code`, `name`? | run Lua in the live runtime; data is the array of return values |
 | `plugin.reload` / `plugin.unload` | `name` | hot reload / unload |
@@ -62,15 +75,46 @@ Output: `{"name","width","height","scale","enabled"}` (logical size).
 
 `key` uses the `shady.bind` syntax (`Super+Shift+z`) and goes through module
 hooks, native plugins, Lua bindings and compositor bindings like a real key
-press, so any plugin or rice shortcut can be triggered. It is **not** delivered
-to the focused client: `handled: false` means no binding took it, and the key
-went nowhere.
+press, so any plugin or rice shortcut can be triggered (`handled`). Since Shady
+0.4.0 a key none of them takes goes on to the focused window, with its
+modifiers (`sent`): `key keys=ctrl+l` reaches a browser. Before 0.4.0 such a
+key went nowhere and the answer had no `sent`. Key names are XKB names,
+matched case-insensitively (`Return`, `BackSpace`, `Up`, `F5`, `slash`).
 
-`screenshot` replies immediately; the file is written with the next frame drawn.
-`screenshot.saved` (or `screenshot.failed`) is then published with the path.
-Default path: `$XDG_PICTURES_DIR` or `~/Pictures`, `shady-<YYYYmmdd-HHMMSS>.png`.
-A second request while one is pending fails with "a screenshot is already
-pending".
+`type` (0.4.0) types any text: what the keymap has as keys, anything else
+(Hangul, emoji) with a keymap made for the text. `\n` is Return. Automation
+keys never go through an input method such as fcitx5.
+
+`button` is `left` (default), `right`, `middle`, `side`, `extra`, `forward`,
+`back` or a Linux button code. Coordinates are layout coordinates, as in
+`windows` and `outputs`, not pixels of a scaled output.
+
+`screenshot` without `wait` replies immediately with `{"path"}`; the file is
+written with the next frame drawn and `screenshot.saved` (or
+`screenshot.failed`) is published with the path. With `wait=true` (0.4.0) it
+replies once written, with where the image lies:
+`{"path","output","width","height","x","y","logical_width","logical_height","scale"}`;
+image pixel `(px, py)` is layout point `(x + px/scale, y + py/scale)`.
+`window=<id>` or a region crops, `output` picks the output, `max_width` /
+`max_height` scale down. Default path: `$XDG_PICTURES_DIR` or `~/Pictures`,
+`shady-<YYYYmmdd-HHMMSS>.png`. One capture at a time ("a screenshot is already
+pending"); one no frame serves fails after 5 s.
+
+### Computer use
+
+The loop an agent uses to work a session as a person would:
+
+```sh
+shadyctl screenshot path=/tmp/s.png wait=true max_width=1280   # look
+shadyctl pointer.click x=640 y=360                             # act
+shadyctl type 'text=hello, 세계'
+shadyctl key keys=Return
+shadyctl wait idle=200 timeout=3000                            # let it settle, then look again
+```
+
+Over MCP, [shady-mcp](https://github.com/gloaming-dusk/shady-mcp) wraps exactly
+this, with coordinates in screenshot pixels and the image returned inline.
+
 
 ## Events
 
